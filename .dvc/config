@@ -1,0 +1,5 @@
+[core]
+    remote = ubaid
+    autostage = true
+['remote "ubaid"']
+    url = ../tmp

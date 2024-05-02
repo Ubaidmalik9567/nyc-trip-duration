@@ -4,7 +4,7 @@ nyc-trip-duration
 ETE nyc-trip-duration
 
 Project Organization
-------------
+-------------
 
     ├── LICENSE
     ├── Makefile           <- Makefile with commands like `make data` or `make train`

@@ -1,0 +1,15 @@
+artifact_uri: file:///G:/vs%20codes/nyc-trip-duration/mlruns/0/8dbd917d5c074906919a6a62c2f11a86/artifacts
+end_time: 1714644098840
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 8dbd917d5c074906919a6a62c2f11a86
+run_name: XGBRegressor
+run_uuid: 8dbd917d5c074906919a6a62c2f11a86
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1714644050942
+status: 3
+tags: []
+user_id: Ubaid ur  Rehman
