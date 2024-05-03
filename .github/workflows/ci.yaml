@@ -1,38 +1,39 @@
-name: CI Pipeline
+name: Deploy to Amazon ECS
 
 on:
   push:
-
+    
 permissions:
   id-token: write
   contents: read
 
 jobs:
-  integration:
+  Integration:
     name: Continuous Integration
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v3
 
       - name: Lint code
-        run: echo "Linting repository"
+        run: echo "linting repository"
 
       - name: Run unit tests
-        run: echo "Running unit tests"
+        run: echo "Unit tests running"
 
   build-and-push-ecr-image:
-    name: Push to ECR
-    needs: integration
+    name: Continuous Delivery/ Push to ECR
+    needs: Integration
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Install Utilities
         run: |
           sudo apt-get update
           sudo apt-get install -y jq unzip
+            
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -54,13 +55,14 @@ jobs:
           # Build a docker container and
           # push it to ECR so that it can
           # be deployed to ECS.
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-  
+          docker build -t "${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}" .
+          docker push "${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+          echo "::set-output name=image::${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+
   Continuous-Deployment:
-    runs-on: self-hosted
+    name: Pull to ecr and run it into ec2
     needs: build-and-push-ecr-image
+    runs-on: self-hosted-nyc
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -72,20 +74,20 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
-      
-      - name: Pull latest images
+
+      - name: pull latest image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
           IMAGE_TAG: latest
         run: |
-          docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-      
-      - name: Delete Previous Container
+          docker pull "${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+        
+      - name: delete previous image
         run: |
-          docker rm -f trip-duration || true
-
-      - name: Run Docker Image to serve users
+          docker rm -f hamspam || true
+        
+      - name: run docker image to user server
         run: |
-          docker run -d -p 8080:8080 --ipc="host" --name=nyc-trip-duration -e 'AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}' -e 'AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}' -e 'AWS_REGION=${{ secrets.AWS_REGION }}'  ${{secrets.AWS_ECR_LOGIN_URI}}/${{ secrets.ECR_REPOSITORY_NAME }}:latest
-      
+          docker run -d -p 8080:8080 --name=nyc-trip-duration -e 'AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}' -e 'AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}' -e 'AWS_REGION=${{ secrets.AWS_REGION }}'  ${{secrets.AWS_ECR_LOGIN_URI}}/${{ secrets.ECR_REPOSITORY_NAME }}:latest
+          
