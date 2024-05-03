@@ -52,7 +52,7 @@ COPY requirements.txt /app/requirements.txt
 EXPOSE 8080
 
 # Run the application.
-CMD uvicorn 'service:app' --host=0.0.0.0 --port=8080
+CMD uvicorn 'service:app' --host=127.0.0.1 --port=8080
 
 
 
